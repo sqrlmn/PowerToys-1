@@ -52,16 +52,21 @@ build:
           - 'modules\PowerRenameExt.dll'
           signing_options:
             sign_inline: true  # This does signing a soon as this command completes
+
+# Commands to run during the packaging stage.
+package:
+  commands:
     - !!buildcommand
-      name: 'Build Power Toys Installer'
-      command: '.pipelines\build-installer.cmd'
+      name: 'Package the MSIX Binaries'
+      command: '.pipelines\msix\build_msix.cmd'
       artifacts:
-        - from: 'installer\PowerToysSetup\x64\Release'
-          to: 'Build_Installer_Output'
+        - from: '.pipelines\msix\bin'
+          to: 'Build_Package_Output'
           include:
-            - 'PowerToysSetup.msi'
-          signing_options:
-            sign_inline: true  # This does signing a soon as this command completes
+          - '*.msix'
+          - '*.msixbundle'
+        signing_options:
+            sign_inline: true
 
 static_analysis_options:                             
   binskim_options:  
