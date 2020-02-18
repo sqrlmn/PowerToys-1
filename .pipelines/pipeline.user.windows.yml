@@ -30,10 +30,6 @@ restore:
     - !!defaultcommand
       name: 'Restore Power Toys'
       command: '.pipelines\restore.cmd'
-    - !!defaultcommand
-      name: 'Restore Installer'
-      command: '.pipelines\restore-installer.cmd'
-
 
 build:
   commands:
