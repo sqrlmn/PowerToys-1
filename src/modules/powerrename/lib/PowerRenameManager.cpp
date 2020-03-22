@@ -15,12 +15,14 @@ extern HINSTANCE g_hInst;
 // The default FOF flags to use in the rename operations
 #define FOF_DEFAULTFLAGS (FOF_ALLOWUNDO | FOFX_ADDUNDORECORD | FOFX_SHOWELEVATIONPROMPT | FOF_RENAMEONCOLLISION)
 
-IFACEMETHODIMP_(ULONG) CPowerRenameManager::AddRef()
+IFACEMETHODIMP_(ULONG)
+CPowerRenameManager::AddRef()
 {
     return InterlockedIncrement(&m_refCount);
 }
 
-IFACEMETHODIMP_(ULONG) CPowerRenameManager::Release()
+IFACEMETHODIMP_(ULONG)
+CPowerRenameManager::Release()
 {
     long refCount = InterlockedDecrement(&m_refCount);
 
@@ -159,7 +161,7 @@ IFACEMETHODIMP CPowerRenameManager::GetItemById(_In_ int id, _COM_Outptr_ IPower
     HRESULT hr = E_FAIL;
     std::map<int, IPowerRenameItem*>::iterator it;
     it = m_renameItems.find(id);
-    if (it !=  m_renameItems.end())
+    if (it != m_renameItems.end())
     {
         *ppItem = m_renameItems[id];
         (*ppItem)->AddRef();
@@ -208,7 +210,7 @@ IFACEMETHODIMP CPowerRenameManager::GetRenameItemCount(_Out_ UINT* count)
             (*count)++;
         }
     }
- 
+
     return S_OK;
 }
 
@@ -291,7 +293,7 @@ IFACEMETHODIMP CPowerRenameManager::OnFlagsChanged(_In_ DWORD flags)
 HRESULT CPowerRenameManager::s_CreateInstance(_Outptr_ IPowerRenameManager** ppsrm)
 {
     *ppsrm = nullptr;
-    CPowerRenameManager *psrm = new CPowerRenameManager();
+    CPowerRenameManager* psrm = new CPowerRenameManager();
     HRESULT hr = psrm ? S_OK : E_OUTOFMEMORY;
     if (SUCCEEDED(hr))
     {
@@ -331,11 +333,11 @@ HRESULT CPowerRenameManager::_Init()
 // Custom messages for worker threads
 enum
 {
-    SRM_REGEX_ITEM_UPDATED = (WM_APP + 1),  // Single rename item processed by regex worker thread
-    SRM_REGEX_STARTED,                      // RegEx operation was started
-    SRM_REGEX_CANCELED,                     // Regex operation was canceled
-    SRM_REGEX_COMPLETE,                     // Regex worker thread completed
-    SRM_FILEOP_COMPLETE                     // File Operation worker thread completed
+    SRM_REGEX_ITEM_UPDATED = (WM_APP + 1), // Single rename item processed by regex worker thread
+    SRM_REGEX_STARTED, // RegEx operation was started
+    SRM_REGEX_CANCELED, // Regex operation was canceled
+    SRM_REGEX_COMPLETE, // Regex worker thread completed
+    SRM_FILEOP_COMPLETE // File Operation worker thread completed
 };
 
 struct WorkerThreadData
@@ -421,7 +423,6 @@ void CPowerRenameManager::_LogOperationTelemetry()
     GetSelectedItemCount(&selectedItemCount);
     GetRenameItemCount(&renameItemCount);
     get_flags(&flags);
-
 
     // Enumerate extensions used into a map
     std::map<std::wstring, int> extensionsMap;
@@ -585,22 +586,41 @@ DWORD WINAPI CPowerRenameManager::s_fileOpWorkerThread(_In_ void* pv)
                                 if (SUCCEEDED(pwtd->spsrm->GetItemByIndex(it, &spItem)))
                                 {
                                     bool shouldRename = false;
+                                    // SPP: it will be nice to the test and stop for a message box for each item that is conflicting
+                                    PWSTR originalName = nullptr;
                                     if (SUCCEEDED(spItem->ShouldRenameItem(flags, &shouldRename)) && shouldRename)
                                     {
-                                        PWSTR newName = nullptr;
-                                        if (SUCCEEDED(spItem->get_newName(&newName)))
+                                        if (SUCCEEDED(spItem->get_originalName(&originalName)))
                                         {
-                                            CComPtr<IShellItem> spShellItem;
-                                            if (SUCCEEDED(spItem->get_shellItem(&spShellItem)))
+                                            PWSTR newName = nullptr;
+                                            if (SUCCEEDED(spItem->get_newName(&newName)))
                                             {
-                                                spFileOp->RenameItem(spShellItem, newName, nullptr);
+                                                CComPtr<IShellItem> spShellItem;
+                                                if (SUCCEEDED(spItem->get_shellItem(&spShellItem)))
+                                                {
+                                                    //using spShellItem - try to read what is inside spShellItem
+                                                    //it should contain the full path of the file including the file name, on one of its properties
+                                                    //try to get the full path
+                                                    //next is to get a list of all the files in the path
+                                                    //next is to compare the newName with each file in the path and prompt if found
+
+                                                    // SPP: add an item that is to be renamed
+                                                    if (originalName = newName)
+                                                    {
+                                                        MessageBox(nullptr, L"Do you want to replace the files with the same name", L"WARNING !!!! ", MB_YESNO);
+                                                        spFileOp->RenameItem(spShellItem, newName, nullptr);
+                                                    }
+
+                                                   // spFileOp->RenameItem(spShellItem, newName, nullptr);
+                                                }
+                                                CoTaskMemFree(newName);
                                             }
-                                            CoTaskMemFree(newName);
                                         }
                                     }
+                                 
                                 }
                             }
-                        }
+                    }
 
                         // Set the operation flags
                         if (SUCCEEDED(spFileOp->SetOperationFlags(FOF_DEFAULTFLAGS)))
@@ -610,11 +630,12 @@ DWORD WINAPI CPowerRenameManager::s_fileOpWorkerThread(_In_ void* pv)
                             {
                                 spFileOp->SetOwnerWindow(pwtd->hwndParent);
                             }
-                            
+
                             // Perform the operation
                             // We don't care about the return code here. We would rather
                             // return control back to explorer so the user can cleanly
                             // undo the operation if it failed halfway through.
+                            //SPP: this is the guy that performs the rename
                             spFileOp->PerformOperations();
                         }
                     }
@@ -631,6 +652,7 @@ DWORD WINAPI CPowerRenameManager::s_fileOpWorkerThread(_In_ void* pv)
 
     return 0;
 }
+
 
 HRESULT CPowerRenameManager::_PerformRegExRename()
 {
@@ -685,6 +707,7 @@ HRESULT CPowerRenameManager::_CreateRegExWorkerThread()
 
 DWORD WINAPI CPowerRenameManager::s_regexWorkerThread(_In_ void* pv)
 {
+    CComPtr<IFileOperation> spFileOp;
     if (SUCCEEDED(CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE)))
     {
         WorkerThreadData* pwtd = reinterpret_cast<WorkerThreadData*>(pv);
@@ -763,7 +786,6 @@ DWORD WINAPI CPowerRenameManager::s_regexWorkerThread(_In_ void* pv)
                                     StringCchCopy(sourceName, ARRAYSIZE(sourceName), originalName);
                                 }
 
-
                                 PWSTR newName = nullptr;
                                 // Failure here means we didn't match anything or had nothing to match
                                 // Call put_newName with null in that case to reset it
@@ -799,7 +821,7 @@ DWORD WINAPI CPowerRenameManager::s_regexWorkerThread(_In_ void* pv)
                                         StringCchCopy(resultName, ARRAYSIZE(resultName), newName);
                                     }
                                 }
-                                
+
                                 // No change from originalName so set newName to
                                 // null so we clear it from our UI as well.
                                 if (lstrcmp(originalName, newNameToUse) == 0)
