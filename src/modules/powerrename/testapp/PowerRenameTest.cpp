@@ -49,8 +49,10 @@ int APIENTRY wWinMain(
                     CComPtr<IPowerRenameUI> spsrui;
                     if (SUCCEEDED(CPowerRenameUI::s_CreateInstance(spsrm, nullptr, true, &spsrui)))
                     {
+                        
                         // Call blocks until we are done
                         spsrui->Show(NULL);
+                       // MessageBox(nullptr, L"Do you want to replace the files with the same name", L"WARNING !!!! ", MB_OK);
                         spsrui->Close();
 
                         // Need to call shutdown to break circular dependencies
