@@ -8,6 +8,7 @@
 #include <windowsx.h>
 #include <thread>
 #include <trace.h>
+#include <iostream>
 
 extern HINSTANCE g_hInst;
 
@@ -429,6 +430,8 @@ HRESULT CPowerRenameUI::_WriteSettings()
             CComPtr<IPowerRenameMRU> spSearchMRU;
             if (SUCCEEDED(m_spSearchACL->QueryInterface(IID_PPV_ARGS(&spSearchMRU))))
             {
+               
+
                 spSearchMRU->AddMRUString(buffer);
             }
         }
@@ -442,6 +445,7 @@ HRESULT CPowerRenameUI::_WriteSettings()
             CComPtr<IPowerRenameMRU> spReplaceMRU;
             if (SUCCEEDED(m_spReplaceACL->QueryInterface(IID_PPV_ARGS(&spReplaceMRU))))
             {
+               
                 spReplaceMRU->AddMRUString(buffer);
             }
         }
@@ -646,6 +650,7 @@ void CPowerRenameUI::_OnCommand(_In_ WPARAM wParam, _In_ LPARAM lParam)
     switch (LOWORD(wParam))
     {
     case IDOK:
+        break;
     case IDCANCEL:
         _OnCloseDlg();
         break;
