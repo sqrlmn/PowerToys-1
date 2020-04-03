@@ -206,8 +206,7 @@
         </Directory>
       </Directory>
       <Directory Id="ProgramMenuFolder">
-        <Directory Id="ApplicationProgramsFolder" Name="PowerToys"/>
-      </Directory>
+       </Directory>
       <Directory Id="DesktopFolder" Name="Desktop"/>
     </Directory>
   </Fragment>
@@ -226,7 +225,7 @@
           <Shortcut Id="ApplicationStartMenuShortcut"
                     Name="PowerToys (Preview)"
                     Description="PowerToys - Windows system utilities to maximize productivity"
-                    Directory="ApplicationProgramsFolder"
+                    Directory="ProgramMenuFolder"
                     WorkingDirectory="INSTALLFOLDER"
                     Icon="powertoys.ico"
                     IconIndex="0"
@@ -236,7 +235,7 @@
           </Shortcut>
         </File>
 
-        <RemoveFolder Id="DeleteShortcutFolder" Directory="ApplicationProgramsFolder" On="uninstall" />
+        
       </Component>
       <Component Id="settings_exe" Guid="A5A461A9-7097-4CBA-9D39-3DBBB6B7B80C" Win64="yes">
         <File Id="PowerToysSettings.exe" KeyPath="yes" Checksum="yes" />
