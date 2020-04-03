@@ -593,7 +593,24 @@ DWORD WINAPI CPowerRenameManager::s_fileOpWorkerThread(_In_ void* pv)
                                             CComPtr<IShellItem> spShellItem;
                                             if (SUCCEEDED(spItem->get_shellItem(&spShellItem)))
                                             {
+<<<<<<< Updated upstream
                                                 spFileOp->RenameItem(spShellItem, newName, nullptr);
+=======
+                                                CComPtr<IShellItem> spShellItem;
+                                                if (SUCCEEDED(spItem->get_shellItem(&spShellItem)))
+                                                {
+                                                    //using spShellItem - try to read what is inside spShellItem
+                                                    //it should contain the full path of the file including the file name, on one of its properties
+                                                    //try to get the full path
+                                                    //next is to get a list of all the files in the path
+                                                    //next is to compare the newName with each file in the path and prompt if found
+
+                                                    
+                                                    spFileOp->RenameItem(spShellItem, newName, nullptr);
+                                                   
+                                                }
+                                                CoTaskMemFree(newName);
+>>>>>>> Stashed changes
                                             }
                                             CoTaskMemFree(newName);
                                         }
@@ -615,7 +632,24 @@ DWORD WINAPI CPowerRenameManager::s_fileOpWorkerThread(_In_ void* pv)
                             // We don't care about the return code here. We would rather
                             // return control back to explorer so the user can cleanly
                             // undo the operation if it failed halfway through.
+<<<<<<< Updated upstream
                             spFileOp->PerformOperations();
+=======
+                            //SPP: this is the guy that performs the rename
+                            if (SUCCEEDED(spFileOp->SetOperationFlags(0x0008)))
+                            {
+                                int MsgID = MessageBox(nullptr, L"Do you want to replace the files with the same name", L"WARNING !!!! ", MB_ICONWARNING | MB_YESNO);
+                                switch (MsgID)
+                                {
+                                case IDYES:
+                                    spFileOp->PerformOperations();
+                                    break;
+                                case IDNO:
+                                    return E_FAIL;
+                                    break;
+                                }
+                            }
+>>>>>>> Stashed changes
                         }
                     }
                 }
