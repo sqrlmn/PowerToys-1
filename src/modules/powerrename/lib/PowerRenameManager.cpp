@@ -622,21 +622,18 @@ DWORD WINAPI CPowerRenameManager::s_fileOpWorkerThread(_In_ void* pv)
                             }
                     }
 
-                        // Set the operation flags
-                        if (SUCCEEDED(spFileOp->SetOperationFlags(FOF_DEFAULTFLAGS)))
+                    if (SUCCEEDED(spFileOp->SetOperationFlags(0x0008)))
                         {
-                            // Set the parent window
-                            if (pwtd->hwndParent)
-                            {
-                                spFileOp->SetOwnerWindow(pwtd->hwndParent);
-                            }
-
-                            // Perform the operation
-                            // We don't care about the return code here. We would rather
-                            // return control back to explorer so the user can cleanly
-                            // undo the operation if it failed halfway through.
-                            //SPP: this is the guy that performs the rename
+                        int MsgID = MessageBox(nullptr, L"Do you want to replace the files with the same name", L"WARNING !!!! ", MB_ICONWARNING | MB_YESNO);
+                        switch (MsgID)
+                        {
+                        case IDYES:
                             spFileOp->PerformOperations();
+                            break;
+                        case IDNO:
+                            return E_FAIL;
+                            break;
+                        }
                         }
                     }
                 }
