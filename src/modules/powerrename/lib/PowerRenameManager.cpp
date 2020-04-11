@@ -604,14 +604,9 @@ DWORD WINAPI CPowerRenameManager::s_fileOpWorkerThread(_In_ void* pv)
                                                     //next is to get a list of all the files in the path
                                                     //next is to compare the newName with each file in the path and prompt if found
 
-                                                    // SPP: add an item that is to be renamed
-                                                    if (originalName = newName)
-                                                    {
-                                                        MessageBox(nullptr, L"Do you want to replace the files with the same name", L"WARNING !!!! ", MB_YESNO);
-                                                        spFileOp->RenameItem(spShellItem, newName, nullptr);
-                                                    }
+                                                   
 
-                                                   // spFileOp->RenameItem(spShellItem, newName, nullptr);
+                                                   spFileOp->RenameItem(spShellItem, newName, nullptr);
                                                 }
                                                 CoTaskMemFree(newName);
                                             }
