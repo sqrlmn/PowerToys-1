@@ -32,8 +32,8 @@
       <![CDATA[(WINDOWSBUILDNUMBER >= 17134)]]>
     </Condition>
 
-    <Icon Id="powertoys.ico" SourceFile="$(var.BinX64Dir)\svgs\icon.ico"/>
-    <Property Id="ARPPRODUCTICON" Value="powertoys.ico" />
+    <Icon Id="powertoys.exe" SourceFile="$(var.BinX64Dir)\svgs\icon.ico"/>
+    <Property Id="ARPPRODUCTICON" Value="powertoys.exe" />
     <Feature Id="CoreFeature" Title="PowerToys" AllowAdvertise="no" Absent="disallow" TypicalDefault="install"
              Description="Contains the Shortcut Guide and Fancy Zones features.">
       <ComponentGroupRef Id="CoreComponents" />
