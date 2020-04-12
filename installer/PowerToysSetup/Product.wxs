@@ -226,7 +226,7 @@
                     Name="PowerToys (Preview)"
                     Description="PowerToys - Windows system utilities to maximize productivity"
                     Directory="ProgramMenuFolder" 
-                    Icon="powertoys.ico"
+                    Icon="powertoys.exe"
                     IconIndex="0"
                     Advertise="yes">
             <ShortcutProperty Key="System.AppUserModel.ID" Value="Microsoft.PowerToysWin32"/>
@@ -477,8 +477,7 @@
                   Name="PowerToys (Preview)"
                   Description="PowerToys - Windows system utilities to maximize productivity"
                   Target="[!PowerToys.exe]"
-                  WorkingDirectory="INSTALLFOLDER"
-                  Icon="powertoys.ico"
+                  Icon="powertoys.exe"
                   Directory="DesktopFolder"/>
       </Component>
     </DirectoryRef>
