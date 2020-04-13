@@ -55,9 +55,34 @@ namespace JSONHelpers
 
     bool isValidDeviceId(const std::wstring& str)
     {
+        std::wstring monitorName;
         std::wstring temp;
         std::vector<std::wstring> parts;
         std::wstringstream wss(str);
+
+        /* 
+         Important fix for device info that contains a '_' in the name:
+         1. first search for '#'
+         2. Then split the remaining string by '_' 
+        */
+
+        // Step 1: parse the name until the #, then to the '_'
+        if (str.find(L'#') != std::string::npos)
+        {
+            std::getline(wss, temp, L'#');
+
+            monitorName = temp;
+
+            if (!std::getline(wss, temp, L'_'))
+            {
+                return false;
+            }
+
+            monitorName += L"#" + temp;
+            parts.push_back(monitorName);
+        }
+
+        // Step 2: parse the rest of the id
         while (std::getline(wss, temp, L'_'))
         {
             parts.push_back(temp);
@@ -579,9 +604,6 @@ namespace JSONHelpers
 
         if (!std::filesystem::exists(jsonFilePath))
         {
-            TmpMigrateAppliedZoneSetsFromRegistry();
-
-            // Custom zone sets have to be migrated after applied zone sets!
             MigrateCustomZoneSetsFromRegistry();
 
             SaveFancyZonesData();
@@ -614,56 +636,6 @@ namespace JSONHelpers
         json::to_file(jsonFilePath, root);
     }
 
-    void FancyZonesData::TmpMigrateAppliedZoneSetsFromRegistry()
-    {
-        std::wregex ex(L"^[0-9]{3,4}_[0-9]{3,4}$");
-
-        std::scoped_lock lock{ dataLock };
-        wchar_t key[256];
-        StringCchPrintf(key, ARRAYSIZE(key), L"%s", RegistryHelpers::REG_SETTINGS);
-        HKEY hkey;
-        if (RegOpenKeyExW(HKEY_CURRENT_USER, key, 0, KEY_ALL_ACCESS, &hkey) == ERROR_SUCCESS)
-        {
-            wchar_t resolutionKey[256]{};
-            DWORD resolutionKeyLength = ARRAYSIZE(resolutionKey);
-            DWORD i = 0;
-            while (RegEnumKeyW(hkey, i++, resolutionKey, resolutionKeyLength) == ERROR_SUCCESS)
-            {
-                std::wstring resolution{ resolutionKey };
-                wchar_t appliedZoneSetskey[256];
-                StringCchPrintf(appliedZoneSetskey, ARRAYSIZE(appliedZoneSetskey), L"%s\\%s", RegistryHelpers::REG_SETTINGS, resolutionKey);
-                HKEY appliedZoneSetsHkey;
-                if (std::regex_match(resolution, ex) && RegOpenKeyExW(HKEY_CURRENT_USER, appliedZoneSetskey, 0, KEY_ALL_ACCESS, &appliedZoneSetsHkey) == ERROR_SUCCESS)
-                {
-                    ZoneSetPersistedDataOLD data;
-                    DWORD dataSize = sizeof(data);
-                    wchar_t value[256]{};
-                    DWORD valueLength = ARRAYSIZE(value);
-                    DWORD i = 0;
-
-                    while (RegEnumValueW(appliedZoneSetsHkey, i++, value, &valueLength, nullptr, nullptr, reinterpret_cast<BYTE*>(&data), &dataSize) == ERROR_SUCCESS)
-                    {
-                        ZoneSetData appliedZoneSetData;
-                        appliedZoneSetData.type = TypeFromLayoutId(data.LayoutId);
-                        if (appliedZoneSetData.type != ZoneSetLayoutType::Custom)
-                        {
-                            appliedZoneSetData.uuid = std::wstring{ value };
-                        }
-                        else
-                        {
-                            // uuid is changed later to actual uuid when migrating custom zone sets
-                            appliedZoneSetData.uuid = std::to_wstring(data.LayoutId);
-                        }
-                        appliedZoneSetsMap[value] = appliedZoneSetData;
-                        dataSize = sizeof(data);
-                        valueLength = ARRAYSIZE(value);
-                    }
-                }
-                resolutionKeyLength = ARRAYSIZE(resolutionKey);
-            }
-        }
-    }
-
     void FancyZonesData::MigrateCustomZoneSetsFromRegistry()
     {
         std::scoped_lock lock{ dataLock };
@@ -684,29 +656,19 @@ namespace JSONHelpers
                 zoneSetData.type = static_cast<CustomLayoutType>(data[2]);
                 // int version =  data[0] * 256 + data[1]; - Not used anymore
 
-                std::wstring uuid = std::to_wstring(data[3] * 256 + data[4]);
-                auto it = std::find_if(appliedZoneSetsMap.begin(), appliedZoneSetsMap.end(), [&uuid](std::pair<std::wstring, ZoneSetData> zoneSetMap) {
-                    return zoneSetMap.second.uuid.compare(uuid) == 0;
-                });
+                GUID guid;
+                auto result = CoCreateGuid(&guid);
+                if (result != S_OK)
+                {
+                    continue;
+                }
+                wil::unique_cotaskmem_string guidString;
+                if (!SUCCEEDED_LOG(StringFromCLSID(guid, &guidString)))
+                {
+                    continue;
+                }
 
-                if (it != appliedZoneSetsMap.end())
-                {
-                    it->second.uuid = uuid = it->first;
-                }
-                else
-                {
-                    GUID guid;
-                    auto result = CoCreateGuid(&guid);
-                    if (result != S_OK)
-                    {
-                        return;
-                    }
-                    wil::unique_cotaskmem_string guidString;
-                    if (SUCCEEDED_LOG(StringFromCLSID(guid, &guidString)))
-                    {
-                        it->second.uuid = uuid = guidString.get();
-                    }
-                }
+                std::wstring uuid = guidString.get();
 
                 switch (zoneSetData.type)
                 {
@@ -714,14 +676,14 @@ namespace JSONHelpers
                     int j = 5;
                     GridLayoutInfo zoneSetInfo(GridLayoutInfo::Minimal{ .rows = data[j++], .columns = data[j++] });
 
-                    for (int row = 0; row < zoneSetInfo.rows(); row++)
+                    for (int row = 0; row < zoneSetInfo.rows(); row++, j+=2)
                     {
-                        zoneSetInfo.rowsPercents()[row] = data[j++] * 256 + data[j++];
+                        zoneSetInfo.rowsPercents()[row] = data[j] * 256 + data[j+1];
                     }
 
-                    for (int col = 0; col < zoneSetInfo.columns(); col++)
+                    for (int col = 0; col < zoneSetInfo.columns(); col++, j+=2)
                     {
-                        zoneSetInfo.columnsPercents()[col] = data[j++] * 256 + data[j++];
+                        zoneSetInfo.columnsPercents()[col] = data[j] * 256 + data[j+1];
                     }
 
                     for (int row = 0; row < zoneSetInfo.rows(); row++)

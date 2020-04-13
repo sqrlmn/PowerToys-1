@@ -58,6 +58,7 @@
     <TargetFrameworkProfile />
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
+    <IntermediateOutputPath>$(SolutionDir)$(Platform)\$(Configuration)\obj\$(AssemblyName)\</IntermediateOutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
     <PlatformTarget>x64</PlatformTarget>
@@ -82,6 +83,9 @@
     <WarningLevel>4</WarningLevel>
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <CodeAnalysisRuleSet>..\..\..\..\codeAnalysis\Rules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>images\FancyZonesEditor.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -109,6 +113,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="DashCaseNamingPolicy.cs" />
+    <Compile Include="StringUtils.cs" />
     <Compile Include="Converters\BooleanToBrushConverter.xaml.cs" />
     <Compile Include="Converters\BooleanToIntConverter.xaml.cs" />
     <Compile Include="CanvasEditor.xaml.cs">
@@ -252,6 +258,9 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="images\Merge.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="images\FancyZonesEditor.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

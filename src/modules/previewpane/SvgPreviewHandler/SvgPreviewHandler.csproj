@@ -48,6 +48,7 @@
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
     <TargetFrameworkProfile />
+    <IntermediateOutputPath>$(SolutionDir)$(Platform)\$(Configuration)\obj\$(AssemblyName)\</IntermediateOutputPath>
   </PropertyGroup>
   <PropertyGroup>
     <SignAssembly>false</SignAssembly>
@@ -107,6 +108,7 @@
     </Compile>
     <Compile Include="SvgPreviewHandler.cs" />
     <Compile Include="SvgTelemetry.cs" />
+    <Compile Include="Utilities\SvgPreviewHandlerHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\common\PreviewHandlerCommon.csproj">

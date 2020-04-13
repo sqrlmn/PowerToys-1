@@ -54,18 +54,33 @@ interface __declspec(uuid("{7F017528-8110-4FB3-BE41-F472969C2560}")) IZoneWindow
      */
     IFACEMETHOD_(void, MoveWindowIntoZoneByIndex)(HWND window, int index) = 0;
     /**
+     * Assign window to the zones based on the set of zone indices inside zone layout.
+     *
+     * @param   window   Handle of window which should be assigned to zone.
+     * @param   indexSet The set of zone indices within zone layout.
+     */
+    IFACEMETHOD_(void, MoveWindowIntoZoneByIndexSet)(HWND window, const std::vector<int>& indexSet) = 0;
+    /**
      * Assign window to the zone based on direction (using WIN + LEFT/RIGHT arrow).
      *
      * @param   window Handle of window which should be assigned to zone.
      * @param   vkCode Pressed arrow key.
+     * @param   cycle  Whether we should move window to the first zone if we reached last zone in layout.
+     *
+     * @returns Boolean which is always true if cycle argument is set, otherwise indicating if there is more
+     *          zones left in the zone layout in which window can move.
      */
-    IFACEMETHOD_(void, MoveWindowIntoZoneByDirection)(HWND window, DWORD vkCode) = 0;
+    IFACEMETHOD_(bool, MoveWindowIntoZoneByDirection)(HWND window, DWORD vkCode, bool cycle) = 0;
     /**
      * Cycle through active zone layouts (giving hints about each layout).
      *
      * @param   vkCode Pressed key representing layout index.
      */
     IFACEMETHOD_(void, CycleActiveZoneSet)(DWORD vkCode) = 0;
+    /**
+     * Restore orginal transaprency of dragged window.
+     */
+    IFACEMETHOD_(void, RestoreOrginalTransparency) () = 0;
     /**
      * Save information about zone in which window was assigned, when closing the window.
      * Used once we open same window again to assign it to its previous zone.
@@ -90,4 +105,4 @@ interface __declspec(uuid("{7F017528-8110-4FB3-BE41-F472969C2560}")) IZoneWindow
 };
 
 winrt::com_ptr<IZoneWindow> MakeZoneWindow(IZoneWindowHost* host, HINSTANCE hinstance, HMONITOR monitor,
-    const std::wstring& uniqueId, bool flashZones) noexcept;
+    const std::wstring& uniqueId, bool flashZones, bool newWorkArea) noexcept;

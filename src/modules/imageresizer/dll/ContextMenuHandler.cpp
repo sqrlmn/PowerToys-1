@@ -147,6 +147,7 @@ HRESULT CContextMenuHandler::QueryContextMenu(_In_ HMENU hmenu, UINT indexMenu, 
         if (!InsertMenuItem(hmenu, indexMenu, TRUE, &mii))
         {
             hr = HRESULT_FROM_WIN32(GetLastError());
+            Trace::QueryContextMenuError(hr);
         }
         else
         {
@@ -220,12 +221,12 @@ HRESULT CContextMenuHandler::ResizePictures(CMINVOKECOMMANDINFO* pici, IShellIte
     HRESULT hr = E_FAIL;
     if (!CreatePipe(&hReadPipe, &hWritePipe, &sa, 0))
     {
-        Trace::InvokedRet(hr);
+        hr = HRESULT_FROM_WIN32(GetLastError());
         return hr;
     }
     if (!SetHandleInformation(hWritePipe, HANDLE_FLAG_INHERIT, 0))
     {
-        Trace::InvokedRet(hr);
+        hr = HRESULT_FROM_WIN32(GetLastError());
         return hr;
     }
     CAtlFile writePipe(hWritePipe);
@@ -277,12 +278,12 @@ HRESULT CContextMenuHandler::ResizePictures(CMINVOKECOMMANDINFO* pici, IShellIte
     delete[] lpszCommandLine;
     if (!CloseHandle(processInformation.hProcess))
     {
-        Trace::InvokedRet(hr);
+        hr = HRESULT_FROM_WIN32(GetLastError());
         return hr;
     }
     if (!CloseHandle(processInformation.hThread))
     {
-        Trace::InvokedRet(hr);
+        hr = HRESULT_FROM_WIN32(GetLastError());
         return hr;
     }
 
@@ -322,7 +323,6 @@ HRESULT CContextMenuHandler::ResizePictures(CMINVOKECOMMANDINFO* pici, IShellIte
 
     writePipe.Close();
     hr = S_OK;
-    Trace::InvokedRet(hr);
     return hr;
 }
 
@@ -376,7 +376,7 @@ HRESULT __stdcall CContextMenuHandler::GetState(IShellItemArray* psiItemArray, B
     // TODO: Instead, detect whether there's a WIC codec installed that can handle this file
     AssocGetPerceivedType(pszExt, &type, &flag, NULL);
 
-    free(pszPath);
+    CoTaskMemFree(pszPath);
     // If selected file is an image...
     if (type == PERCEIVED_TYPE_IMAGE)
     {

@@ -5,8 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:FancyZonesEditor"
              mc:Ignorable="d" 
-            Background="LightGray"
-              Opacity="0.75"
+             Background="Transparent"
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid x:Name="Frame">
         <Grid.RowDefinitions>
@@ -47,4 +46,5 @@
                Background="LightSkyBlue"
                Foreground="Red" Grid.Column="2" Grid.Row="3" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" RenderTransformOrigin="-0.743,-0.2"/>
     </Grid>
+
 </UserControl>
