@@ -7,10 +7,10 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     d:DesignHeight="450"
     d:DesignWidth="800"
-    Background="{StaticResource GridZoneBackgroundBrush}"
-    BorderBrush="{Binding Source={x:Static SystemParameters.WindowGlassBrush}}"
+    Background="LightGray"
+    BorderBrush="DarkGray"
     BorderThickness="1"
-    Opacity="0.8"
+    Opacity="0.5"
     mc:Ignorable="d">
     <Grid x:Name="Frame">
         <Canvas x:Name="Body" />
@@ -22,10 +22,12 @@
             Canvas.Bottom="10"
             HorizontalContentAlignment="Center"
             VerticalContentAlignment="Center"
+            Background="LightSkyBlue"
             Content="ID"
-            FontFamily="Segoe UI Light"
-            FontSize="64"
-            Foreground="White" />
+            FontFamily="Times New Roman"
+            FontSize="80"
+            Foreground="Red"
+            RenderTransformOrigin="-0.743,-0.2" />
         <!--<TextBlock Margin="2" Text="Shift Key switches direction&#13;Ctrl  Key repeats"/>-->
     </Grid>
 </UserControl>
